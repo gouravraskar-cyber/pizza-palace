@@ -56,7 +56,7 @@ export class AuthComponent implements OnInit, OnDestroy {
 
   private startSlider(): void {
     this.sliderInterval = setInterval(() => {
-      this.currentSlide.update(current => 
+      this.currentSlide.update(current =>
         (current + 1) % this.sliderImages.length
       );
     }, 5000); // Change image every 5 seconds
@@ -95,6 +95,29 @@ export class AuthComponent implements OnInit, OnDestroy {
     this.errors.set({});
   }
 
+  // Restrict phone input to digits only and max 10 characters
+  onPhoneInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    // Remove non-digits and limit to 10 characters
+    input.value = input.value.replace(/\D/g, '').slice(0, 10);
+    this.phone = input.value;
+  }
+
+  // For login field - if it's all digits, restrict to 10
+  onEmailOrPhoneInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+
+    // Check if input looks like a phone number (only digits)
+    const isPhoneNumber = /^\d+$/.test(value);
+
+    if (isPhoneNumber && value.length > 10) {
+      // Restrict to 10 digits if it's a phone number
+      input.value = value.slice(0, 10);
+      this.emailOrPhone = input.value;
+    }
+  }
+
   validateForm(): boolean {
     const newErrors: { [key: string]: string } = {};
 
@@ -105,7 +128,7 @@ export class AuthComponent implements OnInit, OnDestroy {
       } else {
         const isEmail = this.emailOrPhone.includes('@');
         const isPhone = /^[0-9]{10}$/.test(this.emailOrPhone.replace(/\D/g, ''));
-        
+
         if (isEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.emailOrPhone)) {
           newErrors['emailOrPhone'] = 'Please enter a valid email';
         } else if (!isEmail && !isPhone) {
@@ -164,19 +187,19 @@ export class AuthComponent implements OnInit, OnDestroy {
 
   private async handleLogin(): Promise<void> {
     const result = await this.authService.login(this.emailOrPhone, this.password);
-    
+
     if (result.success) {
       // Load user-specific cart
       const user = this.authService.user();
       if (user) {
         this.cartService.setUserId(user.id);
       }
-      
+
       this.snackbar.success(`🎉 ${result.message}`);
       this.router.navigate(['/']);
     } else {
       this.snackbar.error(`❌ ${result.message}`);
-      
+
       // If no account exists, suggest sign up
       if (result.message.includes('No account')) {
         this.errors.set({ emailOrPhone: 'No account found. Click "Sign Up" to create one.' });
@@ -186,19 +209,19 @@ export class AuthComponent implements OnInit, OnDestroy {
 
   private async handleSignUp(): Promise<void> {
     const result = await this.authService.signUp(this.name, this.email, this.password, this.phone || undefined);
-    
+
     if (result.success) {
       // Load user-specific cart (will be empty for new user)
       const user = this.authService.user();
       if (user) {
         this.cartService.setUserId(user.id);
       }
-      
+
       this.snackbar.success(`🎉 ${result.message}`);
       this.router.navigate(['/']);
     } else {
       this.snackbar.error(`❌ ${result.message}`);
-      
+
       // If account exists, suggest login
       if (result.message.includes('already exists')) {
         this.errors.set({ email: 'Account exists. Click "Login" to sign in.' });

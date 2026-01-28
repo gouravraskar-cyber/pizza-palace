@@ -2,23 +2,16 @@
   <!-- Background Slider -->
   <div class="auth-page__slider">
     @for (image of sliderImages; track image; let i = $index) {
-      <div 
-        class="auth-page__slide" 
-        [class.active]="currentSlide() === i"
-        [style.background-image]="'url(' + image + ')'"
-      ></div>
+    <div class="auth-page__slide" [class.active]="currentSlide() === i" [style.background-image]="'url(' + image + ')'">
+    </div>
     }
     <div class="auth-page__overlay"></div>
-    
+
     <!-- Slider Indicators -->
     <div class="auth-page__slider-indicators">
       @for (image of sliderImages; track image; let i = $index) {
-        <button 
-          class="auth-page__slider-dot"
-          [class.active]="currentSlide() === i"
-          (click)="goToSlide(i)"
-          [attr.aria-label]="'Go to slide ' + (i + 1)"
-        ></button>
+      <button class="auth-page__slider-dot" [class.active]="currentSlide() === i" (click)="goToSlide(i)"
+        [attr.aria-label]="'Go to slide ' + (i + 1)"></button>
       }
     </div>
   </div>
@@ -37,7 +30,8 @@
         {{ isLoginMode() ? 'Welcome Back!' : 'Join Us!' }}
       </h1>
       <p class="auth-card__subtitle">
-        {{ isLoginMode() ? 'Sign in to continue ordering delicious pizzas' : 'Create an account to start your pizza journey' }}
+        {{ isLoginMode() ? 'Sign in to continue ordering delicious pizzas' : 'Create an account to start your pizza
+        journey' }}
       </p>
     </div>
 
@@ -45,101 +39,76 @@
     <form class="auth-form" (ngSubmit)="onSubmit()">
       <!-- Name (Sign Up only) -->
       @if (!isLoginMode()) {
-        <div class="auth-form__group" [class.has-error]="errors()['name']">
-          <label class="auth-form__label" for="name">Full Name</label>
-          <div class="auth-form__input-wrapper">
-            <svg class="auth-form__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-            <input 
-              type="text" 
-              id="name"
-              class="auth-form__input"
-              [(ngModel)]="name"
-              name="name"
-              placeholder="Enter your full name"
-              autocomplete="name"
-            />
-          </div>
-          @if (errors()['name']) {
-            <span class="auth-form__error">{{ errors()['name'] }}</span>
-          }
+      <div class="auth-form__group" [class.has-error]="errors()['name']">
+        <label class="auth-form__label" for="name">Full Name</label>
+        <div class="auth-form__input-wrapper">
+          <svg class="auth-form__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          <input type="text" id="name" class="auth-form__input" [(ngModel)]="name" name="name"
+            placeholder="Enter your full name" autocomplete="name" />
         </div>
+        @if (errors()['name']) {
+        <span class="auth-form__error">{{ errors()['name'] }}</span>
+        }
+      </div>
       }
 
       <!-- Email or Phone (Login) -->
       @if (isLoginMode()) {
-        <div class="auth-form__group" [class.has-error]="errors()['emailOrPhone']">
-          <label class="auth-form__label" for="emailOrPhone">Email or Phone Number</label>
-          <div class="auth-form__input-wrapper">
-            <svg class="auth-form__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-              <polyline points="22,6 12,13 2,6"/>
-            </svg>
-            <input 
-              type="text" 
-              id="emailOrPhone"
-              class="auth-form__input"
-              [(ngModel)]="emailOrPhone"
-              name="emailOrPhone"
-              placeholder="Enter email or phone number"
-              autocomplete="username"
-            />
-          </div>
-          @if (errors()['emailOrPhone']) {
-            <span class="auth-form__error">{{ errors()['emailOrPhone'] }}</span>
-          }
+      <div class="auth-form__group" [class.has-error]="errors()['emailOrPhone']">
+        <label class="auth-form__label" for="emailOrPhone">Email or Phone Number</label>
+        <div class="auth-form__input-wrapper">
+          <svg class="auth-form__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
+          </svg>
+          <input type="text" id="emailOrPhone" class="auth-form__input" [(ngModel)]="emailOrPhone" name="emailOrPhone"
+            placeholder="Enter email or 10-digit phone" autocomplete="username" (input)="onEmailOrPhoneInput($event)" />
         </div>
+        @if (errors()['emailOrPhone']) {
+        <span class="auth-form__error">{{ errors()['emailOrPhone'] }}</span>
+        }
+      </div>
       }
 
       <!-- Email (Sign Up only) -->
       @if (!isLoginMode()) {
-        <div class="auth-form__group" [class.has-error]="errors()['email']">
-          <label class="auth-form__label" for="email">Email Address</label>
-          <div class="auth-form__input-wrapper">
-            <svg class="auth-form__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-              <polyline points="22,6 12,13 2,6"/>
-            </svg>
-            <input 
-              type="email" 
-              id="email"
-              class="auth-form__input"
-              [(ngModel)]="email"
-              name="email"
-              placeholder="Enter your email"
-              autocomplete="email"
-            />
-          </div>
-          @if (errors()['email']) {
-            <span class="auth-form__error">{{ errors()['email'] }}</span>
-          }
+      <div class="auth-form__group" [class.has-error]="errors()['email']">
+        <label class="auth-form__label" for="email">Email Address</label>
+        <div class="auth-form__input-wrapper">
+          <svg class="auth-form__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
+          </svg>
+          <input type="email" id="email" class="auth-form__input" [(ngModel)]="email" name="email"
+            placeholder="Enter your email" autocomplete="email" />
         </div>
+        @if (errors()['email']) {
+        <span class="auth-form__error">{{ errors()['email'] }}</span>
+        }
+      </div>
       }
 
       <!-- Phone (Sign Up only) -->
       @if (!isLoginMode()) {
-        <div class="auth-form__group" [class.has-error]="errors()['phone']">
-          <label class="auth-form__label" for="phone">Phone Number <span class="auth-form__optional">(Optional)</span></label>
-          <div class="auth-form__input-wrapper">
-            <svg class="auth-form__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-            </svg>
-            <input 
-              type="tel" 
-              id="phone"
-              class="auth-form__input"
-              [(ngModel)]="phone"
-              name="phone"
-              placeholder="Enter your phone number"
-              autocomplete="tel"
-            />
-          </div>
-          @if (errors()['phone']) {
-            <span class="auth-form__error">{{ errors()['phone'] }}</span>
-          }
+      <div class="auth-form__group" [class.has-error]="errors()['phone']">
+        <label class="auth-form__label" for="phone">Phone Number <span
+            class="auth-form__optional">(Optional)</span></label>
+        <div class="auth-form__input-wrapper">
+          <svg class="auth-form__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+          </svg>
+          <input type="tel" id="phone" class="auth-form__input" [(ngModel)]="phone" name="phone"
+            placeholder="Enter 10-digit phone number" autocomplete="tel" maxlength="10"
+            (input)="onPhoneInput($event)" />
         </div>
+        @if (errors()['phone']) {
+        <span class="auth-form__error">{{ errors()['phone'] }}</span>
+        }
+      </div>
       }
 
       <!-- Password -->
@@ -147,83 +116,62 @@
         <label class="auth-form__label" for="password">Password</label>
         <div class="auth-form__input-wrapper">
           <svg class="auth-form__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
-          <input 
-            [type]="showPassword() ? 'text' : 'password'" 
-            id="password"
-            class="auth-form__input"
-            [(ngModel)]="password"
-            name="password"
-            placeholder="Enter your password"
-            autocomplete="current-password"
-          />
-          <button 
-            type="button" 
-            class="auth-form__toggle-password"
-            (click)="togglePasswordVisibility()"
-            aria-label="Toggle password visibility"
-          >
+          <input [type]="showPassword() ? 'text' : 'password'" id="password" class="auth-form__input"
+            [(ngModel)]="password" name="password" placeholder="Enter your password" autocomplete="current-password" />
+          <button type="button" class="auth-form__toggle-password" (click)="togglePasswordVisibility()"
+            aria-label="Toggle password visibility">
             @if (showPassword()) {
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                <line x1="1" y1="1" x2="23" y2="23"/>
-              </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+              <line x1="1" y1="1" x2="23" y2="23" />
+            </svg>
             } @else {
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
             }
           </button>
         </div>
         @if (errors()['password']) {
-          <span class="auth-form__error">{{ errors()['password'] }}</span>
+        <span class="auth-form__error">{{ errors()['password'] }}</span>
         }
       </div>
 
       <!-- Confirm Password (Sign Up only) -->
       @if (!isLoginMode()) {
-        <div class="auth-form__group" [class.has-error]="errors()['confirmPassword']">
-          <label class="auth-form__label" for="confirmPassword">Confirm Password</label>
-          <div class="auth-form__input-wrapper">
-            <svg class="auth-form__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-            <input 
-              [type]="showPassword() ? 'text' : 'password'" 
-              id="confirmPassword"
-              class="auth-form__input"
-              [(ngModel)]="confirmPassword"
-              name="confirmPassword"
-              placeholder="Confirm your password"
-              autocomplete="new-password"
-            />
-          </div>
-          @if (errors()['confirmPassword']) {
-            <span class="auth-form__error">{{ errors()['confirmPassword'] }}</span>
-          }
+      <div class="auth-form__group" [class.has-error]="errors()['confirmPassword']">
+        <label class="auth-form__label" for="confirmPassword">Confirm Password</label>
+        <div class="auth-form__input-wrapper">
+          <svg class="auth-form__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          <input [type]="showPassword() ? 'text' : 'password'" id="confirmPassword" class="auth-form__input"
+            [(ngModel)]="confirmPassword" name="confirmPassword" placeholder="Confirm your password"
+            autocomplete="new-password" />
         </div>
+        @if (errors()['confirmPassword']) {
+        <span class="auth-form__error">{{ errors()['confirmPassword'] }}</span>
+        }
+      </div>
       }
 
       <!-- Submit Button -->
-      <button 
-        type="submit" 
-        class="auth-form__submit"
-        [class.loading]="isLoading()"
-        [disabled]="isLoading()"
-      >
+      <button type="submit" class="auth-form__submit" [class.loading]="isLoading()" [disabled]="isLoading()">
         @if (isLoading()) {
-          <span class="auth-form__spinner"></span>
-          <span>{{ isLoginMode() ? 'Signing in...' : 'Creating account...' }}</span>
+        <span class="auth-form__spinner"></span>
+        <span>{{ isLoginMode() ? 'Signing in...' : 'Creating account...' }}</span>
         } @else {
-          <span>{{ isLoginMode() ? 'Sign In' : 'Create Account' }}</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
+        <span>{{ isLoginMode() ? 'Sign In' : 'Create Account' }}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
         }
       </button>
     </form>
@@ -247,20 +195,21 @@
     <div class="auth-card__features">
       <div class="auth-card__feature">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-          <polyline points="22 4 12 14.01 9 11.01"/>
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
         </svg>
         <span>Fast ordering</span>
       </div>
       <div class="auth-card__feature">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
         </svg>
         <span>Secure checkout</span>
       </div>
       <div class="auth-card__feature">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          <path
+            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
         <span>Exclusive offers</span>
       </div>
