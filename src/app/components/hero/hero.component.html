@@ -1,0 +1,57 @@
+<section class="hero">
+  <!-- Background Image -->
+  <div class="hero__background">
+    <img 
+      src="https://images.unsplash.com/photo-1604382355076-af4b0eb60143?w=1920&q=80" 
+      alt="Delicious pizza background"
+      class="hero__background-image"
+    />
+    <div class="hero__overlay"></div>
+  </div>
+
+  <!-- Content -->
+  <div class="hero__content">
+    <div class="hero__text-wrapper">
+      <span class="hero__badge">🔥 Fresh from the oven</span>
+      <h1 class="hero__title">
+        <span class="hero__title-line">Hot.</span>
+        <span class="hero__title-line">Fresh.</span>
+        <span class="hero__title-line hero__title-highlight">Delivered.</span>
+      </h1>
+      <p class="hero__subtitle">
+        Authentic pizzas made with love, using only the finest ingredients. 
+        Experience the taste of Italy in every bite.
+      </p>
+      <div class="hero__cta">
+        <button class="hero__btn hero__btn--primary" (click)="scrollToMenu()">
+          <span>Order Now</span>
+          <svg class="hero__btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+        <button class="hero__btn hero__btn--secondary" (click)="scrollToMenu()">
+          View Menu
+        </button>
+      </div>
+    </div>
+
+    <!-- Decorative Elements -->
+    <div class="hero__decorations">
+      <div class="hero__decoration hero__decoration--1">🍕</div>
+      <div class="hero__decoration hero__decoration--2">🍅</div>
+      <div class="hero__decoration hero__decoration--3">🧀</div>
+    </div>
+  </div>
+
+  <!-- Scroll Indicator -->
+  <div class="hero__scroll-indicator">
+    <span class="hero__scroll-text">Scroll to explore</span>
+    <div class="hero__scroll-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M19 12l-7 7-7-7"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+

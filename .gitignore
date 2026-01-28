@@ -1,0 +1,46 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Build outputs
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# IDE
+/.idea
+/.vscode/*
+!/.vscode/extensions.json
+!/.vscode/launch.json
+!/.vscode/tasks.json
+*.swp
+*.swo
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Misc
+/.angular/cache
+.sass-cache/
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+/.history
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment files with secrets (optional - uncomment if needed)
+# /src/environments/environment.ts
+# /src/environments/environment.prod.ts
+

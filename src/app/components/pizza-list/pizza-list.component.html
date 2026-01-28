@@ -1,0 +1,40 @@
+<section class="pizza-list" id="menu">
+  <div class="pizza-list__container">
+    <!-- Section Header -->
+    <div class="pizza-list__header">
+      <span class="pizza-list__badge">🍕 Our Menu</span>
+      <h2 class="pizza-list__title">
+        Handcrafted <span class="pizza-list__title-highlight">Pizzas</span>
+      </h2>
+      <p class="pizza-list__subtitle">
+        Made fresh daily with premium ingredients and authentic recipes passed down through generations.
+      </p>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+    <div class="pizza-list__loading">
+      <div class="pizza-list__spinner"></div>
+      <p>Loading delicious pizzas...</p>
+    </div>
+    }
+
+    <!-- Pizza Grid -->
+    @if (!isLoading() && pizzas().length > 0) {
+    <div class="pizza-list__grid">
+      @for (pizza of pizzas(); track pizza.id; let i = $index) {
+      <div class="pizza-list__item" [style.animation-delay]="i * 0.1 + 's'" #pizzaCard>
+        <app-pizza-card [pizza]="pizza" />
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Empty State -->
+    @if (!isLoading() && pizzas().length === 0) {
+    <div class="pizza-list__empty">
+      <p>🍕 No pizzas available at the moment. Please try again later.</p>
+    </div>
+    }
+  </div>
+</section>

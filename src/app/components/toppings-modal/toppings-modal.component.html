@@ -1,0 +1,130 @@
+@if (isOpen) {
+<div class="modal-overlay" (click)="onOverlayClick($event)">
+  <div class="modal">
+    <!-- Header (Fixed) -->
+    <div class="modal__header">
+      <div class="modal__pizza-info">
+        <img [src]="pizza.imageUrl" [alt]="pizza.name" class="modal__pizza-image" />
+        <div class="modal__pizza-details">
+          <h2 class="modal__title">Customize Your Pizza</h2>
+          <h3 class="modal__pizza-name">{{ pizza.name }}</h3>
+          <span class="modal__base-price">
+            Base: ₹{{ basePriceWithSize().toFixed(2) }}
+            @if (selectedSize() && selectedSize()!.name !== 'regular') {
+            <span class="modal__size-tag">({{ selectedSize()!.display_name }})</span>
+            }
+          </span>
+        </div>
+      </div>
+      <button class="modal__close" (click)="onClose()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Scrollable Content -->
+    <div class="modal__content">
+      <!-- Size Selection -->
+      <div class="modal__size-section">
+        <h4 class="modal__section-title">Choose Size</h4>
+        <div class="modal__sizes">
+          @for (size of sizes(); track size.id) {
+          <button class="modal__size-btn" [class.selected]="isSizeSelected(size)" (click)="setSize(size)">
+            <span class="modal__size-radio">
+              @if (isSizeSelected(size)) {
+              <span class="modal__size-radio-dot"></span>
+              }
+            </span>
+            <span class="modal__size-info">
+              <span class="modal__size-name">{{ size.display_name }}</span>
+              <span class="modal__size-serves">{{ size.serves }}</span>
+            </span>
+            @if (size.price_multiplier !== 1) {
+            <span class="modal__size-price">
+              ₹{{ (pizza.price * size.price_multiplier).toFixed(0) }}
+            </span>
+            } @else {
+            <span class="modal__size-price">₹{{ pizza.price.toFixed(0) }}</span>
+            }
+          </button>
+          }
+        </div>
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="modal__categories">
+        @for (cat of categories; track cat.key) {
+        @if (!pizza.isVeg || cat.key !== 'meat') {
+        <button class="modal__category-btn" [class.active]="activeCategory() === cat.key"
+          (click)="setCategory(cat.key)">
+          <span class="modal__category-icon">{{ cat.icon }}</span>
+          <span class="modal__category-label">{{ cat.label }}</span>
+        </button>
+        }
+        }
+      </div>
+
+      <!-- Toppings Grid -->
+      <div class="modal__toppings">
+        @for (topping of toppingsByCategory(); track topping.id) {
+        <button class="topping-item" [class.selected]="isSelected(topping)" (click)="toggleTopping(topping)">
+          <span class="topping-item__icon">{{ topping.icon }}</span>
+          <span class="topping-item__name">{{ topping.name }}</span>
+          <span class="topping-item__price">+₹{{ topping.price.toFixed(2) }}</span>
+          <span class="topping-item__check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+        </button>
+        }
+      </div>
+
+      <!-- Selected Toppings Summary -->
+      @if (selectedToppings().length > 0) {
+      <div class="modal__selected">
+        <div class="modal__selected-header">
+          <span class="modal__selected-title">
+            Selected Toppings ({{ selectedToppings().length }})
+          </span>
+          <button class="modal__clear-btn" (click)="clearToppings()">
+            Clear All
+          </button>
+        </div>
+        <div class="modal__selected-items">
+          @for (topping of selectedToppings(); track topping.id) {
+          <span class="modal__selected-tag">
+            {{ topping.icon }} {{ topping.name }}
+            <button class="modal__selected-remove" (click)="toggleTopping(topping)">×</button>
+          </span>
+          }
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Footer (Fixed) -->
+    <div class="modal__footer">
+      <div class="modal__total">
+        <span class="modal__total-label">Total</span>
+        <span class="modal__total-price">₹{{ totalPrice().toFixed(2) }}</span>
+      </div>
+      <div class="modal__actions">
+        <button class="modal__skip-btn" (click)="onClose()">
+          Cancel
+        </button>
+        <button class="modal__add-btn" (click)="onAddToCart()" title="Add to Cart">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="9" cy="21" r="1" />
+            <circle cx="20" cy="21" r="1" />
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+          </svg>
+          <span class="modal__add-btn-text">Add to Cart</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
