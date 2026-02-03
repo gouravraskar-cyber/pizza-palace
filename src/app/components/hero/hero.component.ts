@@ -15,6 +15,16 @@ export class HeroComponent {
       menuSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
+
+  scrollToExplore(): void {
+    const menuSection = document.getElementById('menu');
+    if (menuSection) {
+      menuSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      // Fallback: scroll down by viewport height
+      window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
+    }
+  }
 }
 
 

@@ -663,8 +663,16 @@ $breakpoint-md: 768px;
     }
   }
 
-  &__add-btn-text {
+  &__add-btn-text-short {
     display: inline;
+
+    @include sm {
+      display: none;
+    }
+  }
+
+  &__add-btn-text-full {
+    display: none;
 
     @include sm {
       display: inline;

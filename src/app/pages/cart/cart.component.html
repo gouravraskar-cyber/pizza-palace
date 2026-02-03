@@ -148,8 +148,8 @@
             <span class="order-summary__free">FREE</span>
           </div>
           <div class="order-summary__row order-summary__row--tax">
-            <span>Tax (10%)</span>
-            <span>₹{{ (totalPrice() * 0.1).toFixed(2) }}</span>
+            <span>Tax (2%)</span>
+            <span>₹{{ (totalPrice() * 0.02).toFixed(2) }}</span>
           </div>
 
           <div class="order-summary__divider"></div>
@@ -276,7 +276,7 @@
     </div>
 
     <button class="order-confirmation__btn" (click)="closeOrderConfirmation()">
-      <span>Continue Shopping</span>
+      <span>Continue Exploring</span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="5" y1="12" x2="19" y2="12" />
         <polyline points="12 5 19 12 12 19" />
