@@ -1,5 +1,4 @@
-import { Injectable, inject, signal, NgZone } from '@angular/core';
-import { SupabaseService } from './supabase.service';
+import { Injectable, signal, NgZone, inject } from '@angular/core';
 
 export interface SocialLink {
   id?: number;
@@ -36,7 +35,6 @@ export interface SiteSettings {
   providedIn: 'root'
 })
 export class SettingsService {
-  private supabaseService = inject(SupabaseService);
   private ngZone = inject(NgZone);
 
   // Signals for reactive data
@@ -96,21 +94,8 @@ export class SettingsService {
 
   private async loadSocialLinks(): Promise<void> {
     try {
-      const { data, error } = await this.supabaseService.client
-        .from('social_links')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true });
-
-      if (error) throw error;
-
       this.ngZone.run(() => {
-        if (data && data.length > 0) {
-          this.socialLinks.set(data);
-          console.log('Loaded social links from Supabase:', data.length);
-        } else {
-          this.socialLinks.set(this.defaultSocialLinks);
-        }
+        this.socialLinks.set(this.defaultSocialLinks);
       });
     } catch (err: any) {
       console.error('Error loading social links:', err);
@@ -122,21 +107,8 @@ export class SettingsService {
 
   private async loadQuickLinks(): Promise<void> {
     try {
-      const { data, error } = await this.supabaseService.client
-        .from('quick_links')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true });
-
-      if (error) throw error;
-
       this.ngZone.run(() => {
-        if (data && data.length > 0) {
-          this.quickLinks.set(data);
-          console.log('Loaded quick links from Supabase:', data.length);
-        } else {
-          this.quickLinks.set(this.defaultQuickLinks);
-        }
+        this.quickLinks.set(this.defaultQuickLinks);
       });
     } catch (err: any) {
       console.error('Error loading quick links:', err);
@@ -148,21 +120,8 @@ export class SettingsService {
 
   private async loadContactInfo(): Promise<void> {
     try {
-      const { data, error } = await this.supabaseService.client
-        .from('contact_info')
-        .select('*')
-        .limit(1)
-        .single();
-
-      if (error) throw error;
-
       this.ngZone.run(() => {
-        if (data) {
-          this.contactInfo.set(data);
-          console.log('Loaded contact info from Supabase');
-        } else {
-          this.contactInfo.set(this.defaultContactInfo);
-        }
+        this.contactInfo.set(this.defaultContactInfo);
       });
     } catch (err: any) {
       console.error('Error loading contact info:', err);

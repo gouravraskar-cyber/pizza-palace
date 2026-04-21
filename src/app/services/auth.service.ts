@@ -1,5 +1,4 @@
 import { Injectable, signal, computed, inject, NgZone } from '@angular/core';
-import { SupabaseService } from './supabase.service';
 
 export interface User {
   id: number;
@@ -22,11 +21,11 @@ interface UserDB {
   providedIn: 'root'
 })
 export class AuthService {
-  private supabaseService = inject(SupabaseService);
   private ngZone = inject(NgZone);
   
   private currentUser = signal<User | null>(null);
   private readonly CURRENT_USER_KEY = 'pizza_palace_current_user';
+  private readonly USERS_DB_KEY = 'pizza_palace_users';
 
   user = computed(() => this.currentUser());
   isLoggedIn = computed(() => this.currentUser() !== null);
@@ -54,73 +53,78 @@ export class AuthService {
     });
   }
 
+  private getUsers(): UserDB[] {
+    const stored = localStorage.getItem(this.USERS_DB_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }
+
+  private saveUsers(users: UserDB[]): void {
+    localStorage.setItem(this.USERS_DB_KEY, JSON.stringify(users));
+  }
+
   // Check if email or phone exists
   async checkUserExists(emailOrPhone: string): Promise<boolean> {
     const isEmail = emailOrPhone.includes('@');
+    const users = this.getUsers();
     
-    const { data, error } = await this.supabaseService.client
-      .from('users')
-      .select('id')
-      .or(isEmail 
-        ? `email.eq.${emailOrPhone.toLowerCase()}`
-        : `phone.eq.${emailOrPhone}`
-      )
-      .limit(1);
+    const searchVal = isEmail ? emailOrPhone.toLowerCase() : emailOrPhone;
+    
+    const exists = users.some(u => 
+      (isEmail && u.email === searchVal) || 
+      (!isEmail && u.phone === searchVal)
+    );
 
-    return !error && data && data.length > 0;
+    return exists;
   }
 
   // Sign up new user
   async signUp(name: string, email: string, password: string, phone?: string): Promise<{ success: boolean; message: string }> {
     try {
+      const users = this.getUsers();
+      const emailLower = email.toLowerCase();
+      
       // Check if email already exists
-      const { data: existingEmail } = await this.supabaseService.client
-        .from('users')
-        .select('id')
-        .eq('email', email.toLowerCase())
-        .limit(1);
-
-      if (existingEmail && existingEmail.length > 0) {
+      if (users.some(u => u.email === emailLower)) {
         return { success: false, message: 'An account with this email already exists. Please login.' };
       }
 
       // Check if phone already exists (if provided)
+      let cleanPhone: string | undefined;
       if (phone) {
-        const cleanPhone = phone.replace(/\D/g, '');
-        const { data: existingPhone } = await this.supabaseService.client
-          .from('users')
-          .select('id')
-          .eq('phone', cleanPhone)
-          .limit(1);
-
-        if (existingPhone && existingPhone.length > 0) {
+        cleanPhone = phone.replace(/\D/g, '');
+        if (users.some(u => u.phone === cleanPhone)) {
           return { success: false, message: 'An account with this phone number already exists. Please login.' };
         }
       }
 
       // Create new user
+      const newId = users.length > 0 ? Math.max(...users.map(u => u.id || 0)) + 1 : 1;
       const newUser: UserDB = {
+        id: newId,
         name,
-        email: email.toLowerCase(),
+        email: emailLower,
         password, // Note: In production, hash this password!
-        phone: phone ? phone.replace(/\D/g, '') : undefined
+        phone: cleanPhone,
+        created_at: new Date().toISOString()
       };
 
-      const { data, error } = await this.supabaseService.client
-        .from('users')
-        .insert(newUser)
-        .select('id, name, email, phone, created_at')
-        .single();
-
-      if (error) throw error;
+      users.push(newUser);
+      this.saveUsers(users);
 
       // Auto login after signup
       const user: User = {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        created_at: data.created_at
+        id: newUser.id as number,
+        name: newUser.name,
+        email: newUser.email,
+        phone: newUser.phone,
+        created_at: newUser.created_at
       };
 
       this.setCurrentUser(user);
@@ -138,35 +142,31 @@ export class AuthService {
     try {
       const isEmail = emailOrPhone.includes('@');
       const searchValue = isEmail ? emailOrPhone.toLowerCase() : emailOrPhone.replace(/\D/g, '');
+      const users = this.getUsers();
       
       // Find user by email or phone
-      const { data, error } = await this.supabaseService.client
-        .from('users')
-        .select('*')
-        .or(isEmail 
-          ? `email.eq.${searchValue}`
-          : `phone.eq.${searchValue}`
-        )
-        .limit(1)
-        .single();
+      const userDB = users.find(u => 
+        (isEmail && u.email === searchValue) || 
+        (!isEmail && u.phone === searchValue)
+      );
 
-      if (error || !data) {
+      if (!userDB) {
         const fieldType = isEmail ? 'email' : 'phone number';
         return { success: false, message: `No account found with this ${fieldType}. Please sign up.` };
       }
 
       // Check password
-      if (data.password !== password) {
+      if (userDB.password !== password) {
         return { success: false, message: 'Incorrect password. Please try again.' };
       }
 
       // Login successful
       const user: User = {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        created_at: data.created_at
+        id: userDB.id as number,
+        name: userDB.name,
+        email: userDB.email,
+        phone: userDB.phone,
+        created_at: userDB.created_at
       };
 
       this.setCurrentUser(user);
@@ -194,21 +194,23 @@ export class AuthService {
     }
 
     try {
-      const { data, error } = await this.supabaseService.client
-        .from('users')
-        .update(updates)
-        .eq('id', current.id)
-        .select('id, name, email, phone, created_at')
-        .single();
+      const users = this.getUsers();
+      const userIndex = users.findIndex(u => u.id === current.id);
+      
+      if (userIndex === -1) {
+        throw new Error('User not found');
+      }
 
-      if (error) throw error;
+      const updatedUserDB = { ...users[userIndex], ...updates };
+      users[userIndex] = updatedUserDB;
+      this.saveUsers(users);
 
       const user: User = {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        created_at: data.created_at
+        id: updatedUserDB.id as number,
+        name: updatedUserDB.name,
+        email: updatedUserDB.email,
+        phone: updatedUserDB.phone,
+        created_at: updatedUserDB.created_at
       };
 
       this.setCurrentUser(user);

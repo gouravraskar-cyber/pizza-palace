@@ -1,5 +1,4 @@
-import { Injectable, inject, signal, NgZone } from '@angular/core';
-import { SupabaseService } from './supabase.service';
+import { Injectable, signal, NgZone, inject } from '@angular/core';
 
 export interface PizzaSize {
   id: number;
@@ -16,7 +15,6 @@ export interface PizzaSize {
   providedIn: 'root'
 })
 export class SizeService {
-  private supabaseService = inject(SupabaseService);
   private ngZone = inject(NgZone);
 
   private sizes = signal<PizzaSize[]>([]);
@@ -40,22 +38,12 @@ export class SizeService {
     this.loading.set(true);
 
     try {
-      const { data, error } = await this.supabaseService.client
-        .from('pizza_sizes')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true });
-
-      if (error) throw error;
-
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       this.ngZone.run(() => {
-        if (data && data.length > 0) {
-          this.sizes.set(data);
-          console.log('Loaded pizza sizes from Supabase:', data.length);
-        } else {
-          console.warn('No sizes found in Supabase, using defaults');
-          this.sizes.set(this.defaultSizes);
-        }
+        this.sizes.set(this.defaultSizes);
+        console.log('Loaded pizza sizes from local defaults');
       });
     } catch (err: any) {
       console.error('Error loading pizza sizes:', err);

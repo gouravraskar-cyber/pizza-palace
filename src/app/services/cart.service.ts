@@ -1,7 +1,6 @@
 import { Injectable, signal, computed, inject, NgZone } from '@angular/core';
 import { Pizza } from '../data/pizza.data';
 import { Topping } from '../data/toppings.data';
-import { SupabaseService } from './supabase.service';
 import { PizzaSize } from './size.service';
 
 export interface CartItem {
@@ -13,7 +12,7 @@ export interface CartItem {
   itemPrice: number; // Base pizza price * size multiplier + toppings
 }
 
-// Interface for Supabase cart storage
+// Interface for local cart storage
 interface CartItemDB {
   id?: number;
   user_id?: number;       // For logged-in users
@@ -33,8 +32,8 @@ interface CartItemDB {
   providedIn: 'root'
 })
 export class CartService {
-  private supabaseService = inject(SupabaseService);
   private ngZone = inject(NgZone);
+  private readonly CARTS_DB_KEY = 'pizza_palace_carts';
 
   private cartItems = signal<CartItem[]>([]);
   private sessionId: string;
@@ -120,20 +119,34 @@ export class CartService {
     return { column: 'session_id', value: this.sessionId };
   }
 
-  // Load cart from Supabase
+  private getStoredCarts(): CartItemDB[] {
+    const stored = localStorage.getItem(this.CARTS_DB_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }
+
+  private saveStoredCarts(carts: CartItemDB[]): void {
+    localStorage.setItem(this.CARTS_DB_KEY, JSON.stringify(carts));
+  }
+
+  // Load cart from local storage
   async loadCartFromSupabase(): Promise<void> {
     this.isLoading.set(true);
 
     try {
       const filter = this.getCartFilter();
-
-      const { data, error } = await this.supabaseService.client
-        .from('cart_items')
-        .select('*')
-        .eq(filter.column, filter.value)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
+      const allCarts = this.getStoredCarts();
+      
+      const data = allCarts.filter(c => 
+        (filter.column === 'user_id' && c.user_id === filter.value) ||
+        (filter.column === 'session_id' && c.session_id === filter.value)
+      );
 
       this.ngZone.run(() => {
         if (data && data.length > 0) {
@@ -146,11 +159,11 @@ export class CartService {
             quantity: item.quantity,
             itemPrice: item.item_price
           }));
-          console.log('Loaded cart from Supabase:', cartItems.length, 'items for',
+          console.log('Loaded cart locally:', cartItems.length, 'items for',
             this.currentUserId ? `user ${this.currentUserId}` : `session ${this.sessionId}`);
           this.cartItems.set(cartItems);
         } else {
-          console.log('No cart items found in Supabase for',
+          console.log('No cart items found locally for',
             this.currentUserId ? `user ${this.currentUserId}` : `session ${this.sessionId}`);
           this.cartItems.set([]);
         }
@@ -164,7 +177,7 @@ export class CartService {
     }
   }
 
-  // Save cart item to Supabase
+  // Save cart item to local storage
   private async saveCartItemToSupabase(item: CartItem): Promise<void> {
     try {
       const cartItemDB: Partial<CartItemDB> = {
@@ -177,59 +190,66 @@ export class CartService {
         item_price: item.itemPrice
       };
 
-      // Add user_id or session_id based on login status
       if (this.currentUserId) {
         cartItemDB.user_id = this.currentUserId;
-        cartItemDB.session_id = undefined;  // Clear session_id for logged-in users
+        cartItemDB.session_id = undefined;
       } else {
         cartItemDB.session_id = this.sessionId;
         cartItemDB.user_id = undefined;
       }
 
-      // Upsert: insert or update if exists
-      const { error } = await this.supabaseService.client
-        .from('cart_items')
-        .upsert(cartItemDB as CartItemDB, {
-          onConflict: this.currentUserId ? 'user_id,item_id' : 'session_id,item_id'
-        });
+      const allCarts = this.getStoredCarts();
+      const existingIndex = allCarts.findIndex(c => 
+        c.item_id === cartItemDB.item_id && 
+        ((this.currentUserId && c.user_id === this.currentUserId) || 
+         (!this.currentUserId && c.session_id === this.sessionId))
+      );
 
-      if (error) throw error;
-      console.log('Cart item saved to Supabase:', item.id);
+      if (existingIndex !== -1) {
+        allCarts[existingIndex] = { ...allCarts[existingIndex], ...cartItemDB } as CartItemDB;
+      } else {
+        allCarts.push(cartItemDB as CartItemDB);
+      }
+      
+      this.saveStoredCarts(allCarts);
+      console.log('Cart item saved locally:', item.id);
     } catch (err: any) {
       console.error('Error saving cart item:', err);
     }
   }
 
-  // Remove cart item from Supabase
+  // Remove cart item from local storage
   private async removeCartItemFromSupabase(itemId: string): Promise<void> {
     try {
       const filter = this.getCartFilter();
-
-      const { error } = await this.supabaseService.client
-        .from('cart_items')
-        .delete()
-        .eq(filter.column, filter.value)
-        .eq('item_id', itemId);
-
-      if (error) throw error;
-      console.log('Cart item removed from Supabase:', itemId);
+      let allCarts = this.getStoredCarts();
+      
+      allCarts = allCarts.filter(c => 
+        !(c.item_id === itemId && 
+         ((filter.column === 'user_id' && c.user_id === filter.value) ||
+          (filter.column === 'session_id' && c.session_id === filter.value)))
+      );
+      
+      this.saveStoredCarts(allCarts);
+      console.log('Cart item removed locally:', itemId);
     } catch (err: any) {
       console.error('Error removing cart item:', err);
     }
   }
 
-  // Clear all cart items from Supabase
+  // Clear all cart items from local storage
   private async clearCartFromSupabase(): Promise<void> {
     try {
       const filter = this.getCartFilter();
-
-      const { error } = await this.supabaseService.client
-        .from('cart_items')
-        .delete()
-        .eq(filter.column, filter.value);
-
-      if (error) throw error;
-      console.log('Cart cleared from Supabase');
+      let allCarts = this.getStoredCarts();
+      
+      allCarts = allCarts.filter(c => 
+        !((filter.column === 'user_id' && c.user_id === filter.value) ||
+          (filter.column === 'session_id' && c.session_id === filter.value))
+      );
+      
+      this.saveStoredCarts(allCarts);
+      console.log('Cart cleared locally');
     } catch (err: any) {
       console.error('Error clearing cart:', err);
     }

@@ -1,5 +1,4 @@
 import { Injectable, inject, signal, NgZone } from '@angular/core';
-import { SupabaseService } from './supabase.service';
 import { CartItem } from './cart.service';
 import { AuthService } from './auth.service';
 
@@ -31,7 +30,6 @@ export interface Order {
   providedIn: 'root'
 })
 export class OrderService {
-  private supabaseService = inject(SupabaseService);
   private authService = inject(AuthService);
   private ngZone = inject(NgZone);
 
@@ -40,6 +38,24 @@ export class OrderService {
 
   readonly processing = this.isProcessing.asReadonly();
   readonly order = this.lastOrder.asReadonly();
+
+  private readonly ORDERS_DB_KEY = 'pizza_palace_orders';
+
+  private getStoredOrders(): Order[] {
+    const stored = localStorage.getItem(this.ORDERS_DB_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }
+
+  private saveStoredOrders(orders: Order[]): void {
+    localStorage.setItem(this.ORDERS_DB_KEY, JSON.stringify(orders));
+  }
 
   async createOrder(cartItems: CartItem[], subtotal: number, tax: number, total: number): Promise<{ success: boolean; order?: Order; error?: string }> {
     const user = this.authService.user();
@@ -55,6 +71,9 @@ export class OrderService {
     this.isProcessing.set(true);
 
     try {
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       // Convert cart items to order items
       const orderItems: OrderItem[] = cartItems.map(item => ({
         pizza_name: item.pizza.name,
@@ -66,8 +85,12 @@ export class OrderService {
         total_price: item.itemPrice * item.quantity
       }));
 
+      const allOrders = this.getStoredOrders();
+      const newId = allOrders.length > 0 ? Math.max(...allOrders.map(o => o.id || 0)) + 1 : 1;
+
       // Create order object
-      const orderData: Partial<Order> = {
+      const savedOrder: Order = {
+        id: newId,
         user_id: user.id,
         user_name: user.name,
         user_email: user.email,
@@ -76,25 +99,14 @@ export class OrderService {
         subtotal: subtotal,
         tax: tax,
         total: total,
-        status: 'confirmed'
+        status: 'confirmed',
+        created_at: new Date().toISOString()
       };
 
-      // Save order to Supabase
-      const { data, error } = await this.supabaseService.client
-        .from('orders')
-        .insert(orderData)
-        .select()
-        .single();
+      allOrders.push(savedOrder);
+      this.saveStoredOrders(allOrders);
 
-      if (error) throw error;
-
-      const savedOrder = data as Order;
-
-      // Email sending disabled for now - requires:
-      // 1. Verified domain in Resend
-      // 2. Supabase Edge Function deployed
-      // For demo purposes, order confirmation is shown in the UI instead
-      console.log('Order confirmed for:', savedOrder.user_email);
+      console.log('Order confirmed locally for:', savedOrder.user_email);
 
       this.ngZone.run(() => {
         this.lastOrder.set(savedOrder);
@@ -113,30 +125,7 @@ export class OrderService {
   }
 
   private async sendOrderConfirmationEmail(order: Order): Promise<void> {
-    try {
-      // Call Supabase Edge Function to send email
-      const { error } = await this.supabaseService.client.functions.invoke('send-order-email', {
-        body: {
-          to: order.user_email,
-          userName: order.user_name,
-          orderId: order.id,
-          items: order.items,
-          subtotal: order.subtotal,
-          tax: order.tax,
-          total: order.total
-        }
-      });
-
-      if (error) {
-        console.warn('Email sending failed (Edge Function may not be set up):', error);
-        // Don't throw - order was still created successfully
-      } else {
-        console.log('Order confirmation email sent to:', order.user_email);
-      }
-    } catch (err) {
-      console.warn('Email service not available:', err);
-      // Don't throw - order was still created successfully
-    }
+    console.log('Dummy email sent to:', order.user_email);
   }
 
   async getOrderHistory(): Promise<Order[]> {
@@ -144,14 +133,12 @@ export class OrderService {
     if (!user) return [];
 
     try {
-      const { data, error } = await this.supabaseService.client
-        .from('orders')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const allOrders = this.getStoredOrders();
+      const userOrders = allOrders
+        .filter(o => o.user_id === user.id)
+        .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 
-      if (error) throw error;
-      return data as Order[];
+      return userOrders;
     } catch (err) {
       console.error('Error fetching order history:', err);
       return [];
